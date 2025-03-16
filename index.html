@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping List QR Code Generator</title>
+  <style>
+    :root {
+      --background-color: #2c2c2c;
+      --container-color: #3a3a3a;
+      --text-color: #ffffff;
+      --button-color: #4e4e4e;
+      --delete-btn-color: #ffffff;
+      --list-item-color: #555;
+    }
+
+    .light-mode {
+      --background-color: #f5f5f5;
+      --container-color: #ffffff;
+      --text-color: #000000;
+      --button-color: #dcdcdc;
+      --delete-btn-color: #ffffff;
+      --list-item-color: #e0e0e0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+    }
+
+    body {
+      background-color: var(--background-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      padding: 20px;
+    }
+
+
+    body::before {
+    content: ""; 
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw; /* Full width of the viewport */
+    height: 100vh; /* Full height of the viewport */
+    background: url("BG4.png") no-repeat center center; 
+    background-size: cover; /* ✅ Ensure the whole image is visible without cropping */
+    opacity: 0.5; /* ✅ Transparent to adjust for light/dark mode */
+    transition: opacity 0.3s ease; /* ✅ Smooth transition for mode switching */
+    z-index: -1;
+}
+
+/* ✅ Adjust transparency for light and dark modes */
+body.light-mode::before {
+    opacity: 0.7; /* ✅ Slightly brighter in light mode */
+}
+
+body.dark-mode::before {
+    opacity: 0.4; /* ✅ Slightly dimmer in dark mode */
+}
+
+
+
+/* Toggle Button - Top Right */
+/* Logo at Upper Left */
+.logo {
+  position: absolute;
+  top: 10px;
+  left: 25px;
+  width: 250px;
+  height: 80px;
+  filter: drop-shadow(2px 2px 5px rgba(255, 255, 255, 0.8)); /* White shadow */
+  z-index: 10;
+}
+
+
+/* Toggle Button at Upper Right */
+.toggle-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: #4CAF50;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.toggle-btn:hover {
+  background-color: #45a049;
+}
+
+/* Welcome Container - Increased Distance from List */
+.welcome-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 120px;
+  margin-bottom: 50px;
+}
+
+/* Typewriting Effect */
+.welcome-message {
+  font-size: 24px;
+  font-weight: 600;
+  color: black;
+  /*background-color: rgba(255, 240, 240, 0.05);*/
+  padding: 20px;
+  /*border-radius: 12px;*/
+  text-align: left;
+  /*box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);*/
+  font-family: 'Georgia', serif;
+  /*border: 1px solid rgba(0, 0, 0, 0.1);*/
+  white-space: nowrap;
+  overflow: hidden;
+  border-right: 2px solid var(--text-color);
+}
+
+
+
+    .container {
+      background-color: var(--container-color);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .title {
+      text-align: center;
+      margin-bottom: 20px;
+      color: var(--text-color);
+      font-size: 24px;
+    }
+
+    .input-area {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #555;
+      border-radius: 8px;
+      font-size: 16px;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      outline: none;
+    }
+
+    .add-btn {
+      background-color: var(--button-color);
+      color: var(--text-color);
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s ease;
+    }
+
+    .add-btn:hover {
+      background-color: #6a6a6a;
+    }
+
+    .list {
+      list-style: none;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 16px;
+    }
+
+    .list-item {
+      background-color: var(--list-item-color);
+      padding: 10px;
+      margin-bottom: 6px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-color);
+    }
+
+    .delete-btn {
+      background-color: var(--delete-btn-color);
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .delete-btn:hover {
+      background-color: #d32f2f;
+    }
+
+    .qr-code {
+      text-align: center;
+      margin-top: 12px;
+    }
+
+    .generate-btn {
+      background-color: var(--button-color);
+      color: var(--text-color);
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s ease;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .generate-btn:hover {
+      background-color: #6a6a6a;
+    }
+
+    .alert {
+      color: red;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .close-btn {
+      background-color: transparent;
+      color: red;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+.receipt {
+  background-color: var(--container-color);
+  color: var(--text-color);
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  margin-top: 20px;
+  width: 100%;
+  max-width: 400px;
+  font-family: 'Courier New', Courier, monospace;
+  position: relative;
+  overflow: hidden;
+  background-image: linear-gradient(
+    45deg, 
+    transparent 45%, var(--background-color) 45%, 
+    var(--background-color) 55%, transparent 55%
+  );
+  background-size: 8px 8px;
+}
+
+.receipt-title {
+  font-size: 20px;
+  margin-bottom: 12px;
+  text-align: center;
+  font-weight: bold;
+  border-bottom: 2px dashed var(--text-color);
+  padding-bottom: 8px;
+}
+
+.receipt-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.receipt-list li {
+  padding: 8px 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.receipt-total {
+  margin-top: 12px;
+  padding-top: 8px;
+  font-weight: bold;
+  border-top: 2px dashed var(--text-color);
+  text-align: right;
+}
+
+.receipt-footer {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-color);
+  border-top: 2px dashed var(--text-color);
+  padding-top: 10px;
+}
+
+.receipt-qr {
+  margin-top: 20px; /* Added extra space for the QR */
+  text-align: center;
+}
+
+
+
+  </style>
+</head>
+<body>
+    <!-- Logo -->
+    <img src="Logo4.png" alt="Logo" class="logo">
+  
+    <!-- Toggle Button -->
+    <button class="toggle-btn" onclick="toggleMode()">🌙 Toggle Dark/Light Mode</button>
+  
+    <!-- Welcome Message -->
+    <div class="welcome-container">
+      <div class="welcome-message" id="welcome-message"></div>
+    </div>
+  
+    <div class="container" id="list-container">
+      <h1 class="title">🛒 Shopping List</h1>
+  
+      <div class="input-area">
+        <input type="text" id="item-input" placeholder="Add an item..." autocomplete="off" />
+        <button class="add-btn" onclick="addItem()">➕ Add</button>
+      </div>
+  
+      <ul id="list" class="list"></ul>
+  
+      <button class="generate-btn" onclick="generateQRCode()">📱 Generate QR Code</button>
+  
+      <div id="alert" class="alert" style="display: none;"></div>
+    </div>
+  
+    <div id="qr-code" class="qr-code"></div>
+ 
+  
+  
+  
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+  <script>
+    const items = [];
+    let qrGenerated = false;
+    let isGeneratingQR = false;
+  
+    function addItem() {
+      if (qrGenerated) return;
+      const input = document.getElementById("item-input");
+      const value = input.value.trim();
+  
+      if (value !== "") {
+        items.push(value);
+        input.value = "";
+        renderList();
+      }
+    }
+  
+    function renderList() {
+      const list = document.getElementById("list");
+      list.innerHTML = "";
+      items.forEach((item, index) => {
+        list.innerHTML += `<li class="list-item">${item} <button class="delete-btn" onclick="deleteItem(${index})">❌</button></li>`;
+      });
+    }
+  
+    function deleteItem(index) {
+      if (qrGenerated) return;
+      items.splice(index, 1);
+      renderList();
+    }
+  
+    function generateQRCode() {
+      if (items.length === 0) {
+        showAlert("Please add items to your list before generating a QR code.");
+        return;
+      }
+  
+      if (qrGenerated) return;
+      qrGenerated = true;
+      isGeneratingQR = true; // Stop typewriter animation
+  
+      document.getElementById("list-container").style.display = "none";
+  
+      const qr = qrcode(0, "L");
+      qr.addData(items.join(", "));
+      qr.make();
+  
+      const receiptItems = items.map((item) => `<li>${item}</li>`).join("");
+  
+      document.getElementById("qr-code").innerHTML = `
+        <div class="receipt">
+          <div class="receipt-title">🧾 Shopping Receipt</div>
+          <ul class="receipt-list">
+            ${receiptItems}
+          </ul>
+          <div class="receipt-total">Total Items: ${items.length}</div>
+          <div class="receipt-footer">Thank you for shopping with us!</div>
+          <div class="receipt-qr">
+            ${qr.createImgTag(4)}
+          </div>
+        </div>`;
+  
+      setTimeout(() => {
+        isGeneratingQR = false;
+        typeWriter(); // Resume typewriter after QR code generation
+      }, 3000);
+    }
+  
+    function showAlert(message) {
+      document.getElementById("alert").innerHTML = `${message} <button class="close-btn" onclick="closeAlert()">✖</button>`;
+      document.getElementById("alert").style.display = "flex";
+    }
+  
+    function closeAlert() {
+      document.getElementById("alert").style.display = "none";
+    }
+  
+    function toggleMode() {
+      document.body.classList.toggle('light-mode');
+    }
+  
+    const messageElement = document.getElementById("welcome-message");
+    const messages = ["👋 Welcome, shopper! Start adding items to your checklist."];
+    let currentCharIndex = 0;
+  
+    function typeWriter() {
+      if (isGeneratingQR) return; // Stop animation when generating QR
+  
+      const message = messages[0];
+      if (currentCharIndex < message.length) {
+        messageElement.innerHTML = message.substring(0, currentCharIndex + 1);
+        currentCharIndex++;
+        setTimeout(typeWriter, 50);
+      } else {
+        setTimeout(() => {
+          currentCharIndex = 0;
+          typeWriter(); // Restart animation after completion
+        }, 2000);
+      }
+    }
+  
+    // Start typewriter animation
+    typeWriter();
+  </script>
+  
+  
+</body>
+</html>
